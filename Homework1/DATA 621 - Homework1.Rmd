@@ -1,0 +1,83 @@
+---
+title: "DATA 621 - Homework 1"
+author: "Douglas Barley, LeTicia Cancel, Ethan Haley, Vinayak Kamath, Isabel Magnus, John Mazon"
+date: "9/6/2021"
+output:
+  pdf_document: default
+  html_notebook: default
+  html_document: default
+---
+
+```{r packages, include=FALSE}
+# import all required libraries (Note: this chunk will be excluded from the final knit PDF.)
+library(tidyverse)
+library(ggplot2)
+library(psych)
+```
+
+**DATA 621 Homework 1 - Moneyball**
+
+There are two data sets related to the Moneyball project: training data with 2276 observations of 17 variables, and evaluation data with 259 observations of 16 variables. The training data includes a variable for "Target Wins" which will be the target variable that the evaluation data set will test.
+
+The original source data is stored on a github repository so that all members of the team have equal access to the data files at any time.
+
+```{r import_datasets}
+# import the training data
+moneyball_train_data <- 
+    "https://raw.githubusercontent.com/douglasbarley/DATA621/main/Homework1/moneyball-training-data.csv"
+mb_train <- read.csv(moneyball_train_data, header= TRUE)
+
+# import the evaluation data
+moneyball_evaluate_data <- 
+    "https://raw.githubusercontent.com/douglasbarley/DATA621/main/Homework1/moneyball-evaluation-data.csv"
+mb_eval <- read.csv(moneyball_evaluate_data, header= TRUE)
+
+```
+
+Lets preview the training data in order to become more familiar with it structurally:
+
+```{r training_data_structure}
+
+head(mb_train)
+
+```
+
+It appears that all of the variables are numerical with no categorical variables in the data set. So let's take a look at the basic statistics of each variable:
+
+```{r summary_stats}
+
+summary(mb_train)
+
+```
+
+As seen in the above summary stats, six of the seventeen variables have missing data (i.e. NA values) including TEAM_BATTING_SO, TEAM_BASERUN_SB, TEAM_BASERUN_CS, TEAM_BATTING_HBP, TEAM_PITCHING_SO and TEAM_FIELDING_DP. Given that there are only 2276 total records, the incompleteness of each of the six variables is respectively 4.48%, 5.76%, 33.92%, 91.61%, 4.48% and 12.57%. The question is then, which of these fields with missing values should be completed via imputation and which should be dropped entirely? Let's look at the data descriptively for each variable.
+
+Let's take a look at boxplots for each varialbe to see if anything jumps out.
+
+``` {r explore_visually}
+# explore the data visually
+mb_train %>% 
+  dplyr::select(-INDEX) %>% # remove Index variable which is not statistically significant
+    gather(key,value) %>%
+      ggplot(aes(value)) + geom_boxplot() + facet_wrap(~key, scales = "free")
+```
+
+Thoughts here based on the boxplots?
+
+Next let's look at the data descriptively for each variable.
+
+```{r explore_more_stats}
+
+psych::describe(mb_train)
+
+```
+
+There are considerable skews as well as high kurtosis (i.e. number of outliers) in TEAM_PITCHING_H and TEAM_PITCHING_SO. What are the implications here?
+
+If we filter for only complete records, we are left with only 191 observations out of the original 2276 observations. These are the 191 records that have a value in the TEAM_BATTING_HBP variable.
+
+``` {r explore_complete_records_only}
+
+mb_train %>%
+  filter(complete.cases(.)) # only show records with complete data in all variables
+```
