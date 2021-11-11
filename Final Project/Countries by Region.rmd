@@ -1,0 +1,62 @@
+---
+title: "Countries by Region"
+author: "Douglas Barley"
+date: "11/10/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(dplyr)
+```
+
+## WHO Life Expectancy Data
+
+
+```{r WHO}
+WHO_URL <- "https://raw.githubusercontent.com/douglasbarley/DATA621/main/Final%20Project/Life%20Expectancy%20Data.csv"
+WHO <- read_csv(WHO_URL)
+names(WHO)[1] <- "CountryName"
+head(WHO)
+```
+
+## World Bank (WB) Population by Country data
+
+```{r WB_Pop}
+WB_Pop_URL <- "https://raw.githubusercontent.com/douglasbarley/DATA621/main/Final%20Project/Population_by_Country.csv"
+WB_Pop <- read_csv(WB_Pop_URL) %>%
+  subset(select = c("CountryName","CountryCode"))
+head(WB_Pop)
+```
+
+## World Bank (WB) Country Region metadata
+
+```{r WB_Meta}
+WB_Meta_URL <- "https://raw.githubusercontent.com/douglasbarley/DATA621/main/Final%20Project/Country_Region_Metadata.csv"
+WB_Meta <- read_csv(WB_Meta_URL) %>%
+  subset(select = c("CountryCode","Region","IncomeGroup"))
+head(WB_Meta)
+```
+
+## Join WB data tables
+
+```{r WB_data}
+WB_data <- inner_join(WB_Pop,WB_Meta, by = c("CountryCode" = "CountryCode"), copy = FALSE, keep = FALSE)
+head(WB_data, 10)
+```
+
+## Join WHO data with WB metadata for each country
+
+```{r WHO_with_Region}
+WHO_with_Region <- left_join(WHO,WB_data, by = c("CountryName" = "CountryName"), copy = FALSE, keep = FALSE)
+head(WHO_with_Region, 10)
+```
+
+```{r Region_EDA}
+Country_Counts_by_Region <- WHO_with_Region %>%
+  distinct(CountryName,Region,IncomeGroup) %>%
+    group_by(Region,IncomeGroup) %>%
+      summarize(CountryCount = n())
+
+Country_Counts_by_Region
+```
