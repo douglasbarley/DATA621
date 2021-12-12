@@ -1,0 +1,165 @@
+---
+title: "Countries by Region"
+author: "Douglas Barley"
+date: "11/10/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(dplyr)
+```
+
+```{r}
+df <- read.csv("https://raw.githubusercontent.com/ebhtra/msds-621/main/FinalProject/fewerNAs.csv", header = T)
+head(df)
+```
+
+```{r}
+summary(df)
+```
+
+```{r}
+# add a factor categorizing % of Health Care expenditures as Low, Mid or High for grouping purposes
+df$PctHealthExpTier <- ifelse(df$PctHealthExp < 10,"LowHealth$",ifelse(df$PctHealthExp < 20, "MidHealth$","HighHealth$"))
+tail(df)
+```
+
+
+```{r}
+library(lme4)
+mmod <- lmer(LEx ~ 1 + IncomeGroup + PctHealthExpTier + (1 | Region:IncomeGroup:PctHealthExpTier), df, REML = F)
+summary(mmod)
+```
+
+```{r}
+library(jtools)
+summ(mmod)
+```
+
+```{r}
+library(lmerTest)
+ranova(mmod)
+```
+
+
+
+```{r}
+ranef(mmod)$Region
+```
+
+
+```{r}
+library(lattice)
+
+dotplot(ranef(mmod, condVar=T))
+
+```
+
+
+```{r}
+mmod2 <- lmer(LEx ~ 1 + Region+IncomeGroup+PctHealthExp+(1|Region:IncomeGroup), df, REML = F)
+summary(mmod2)
+```
+
+```{r}
+summ(mmod2)
+```
+
+```{r}
+ranova(mmod2)
+```
+
+
+```{r}
+ranef(mmod2)$IncomeGroup
+```
+
+
+```{r}
+library(lattice)
+dotplot(ranef(mmod2, condVar=TRUE)) 
+
+# The labels definitely need some work!!!
+```
+
+```{r}
+library(ggplot2)
+
+# scatterplot of LEx by PctHealthExp by Region
+
+ggplot(df, aes(y = LEx, x = PctHealthExp, color = Region)) + geom_point() + scale_x_continuous(trans = 'log10') + scale_y_continuous(trans = 'log10') + coord_flip() + facet_wrap(~ Region)
+```
+
+```{r}
+library(ggplot2)
+
+# trying a line plot of LEx by PctHealthExp by Region
+
+ggplot(df, aes(y = LEx, x = PctHealthExp, color = Region)) + geom_line() + scale_x_continuous(trans = 'log10') + scale_y_continuous(trans = 'log10') + coord_flip() + facet_wrap(~ Region)
+```
+
+```{r}
+#Correlation between variables
+library("GGally")
+WHO_Final_Numeric <- df %>%
+  filter( Region=='South Asia') %>%
+  select_if(is.numeric)
+ggcorr(WHO_Final_Numeric,
+       label = T,
+       label_size = 2,
+       label_round = 2,
+       hjust = 1,
+       size = 3,
+       color = "royalblue",
+       layout.exp = 5,
+       low = "darkorange",
+       mid = "gray95",
+       high = "darkgreen",
+       name = "Correlation")
+WHO_Final_Numeric <- df %>%
+  filter( Region=='Europe & Central Asia') %>%
+  select_if(is.numeric)
+ggcorr(WHO_Final_Numeric,
+       label = T,
+       label_size = 2,
+       label_round = 2,
+       hjust = 1,
+       size = 3,
+       color = "royalblue",
+       layout.exp = 5,
+       low = "darkorange",
+       mid = "gray95",
+       high = "darkgreen",
+       name = "Correlation")
+WHO_Final_Numeric <- df %>%
+  filter( Region=='East Asia & Pacific') %>%
+  select_if(is.numeric)
+ggcorr(WHO_Final_Numeric,
+       label = T,
+       label_size = 2,
+       label_round = 2,
+       hjust = 1,
+       size = 3,
+       color = "royalblue",
+       layout.exp = 5,
+       low = "darkorange",
+       mid = "gray95",
+       high = "darkgreen",
+       name = "Correlation")
+WHO_Final_Numeric <- df %>%
+  filter( Region=='North America') %>%
+  select_if(is.numeric)
+ggcorr(WHO_Final_Numeric,
+       label = T,
+       label_size = 2,
+       label_round = 2,
+       hjust = 1,
+       size = 3,
+       color = "royalblue",
+       layout.exp = 5,
+       low = "darkorange",
+       mid = "gray95",
+       high = "darkgreen",
+       name = "Correlation")
+```
